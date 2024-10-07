@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.3.1.RELEASE</version>
+		<relativePath/>
+	</parent>
+
+	<licenses>
+		<license>
+			<name>New Barco License</name>
+			<url>https://github.com/NABEEL-AHMED-JAMIL</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>NABEEL AHMED JAMIL</name>
+			<email>nabeel.amd93@gmail.com</email>
+			<organization>Barco</organization>
+			<organizationUrl>https://github.com/NABEEL-AHMED-JAMIL</organizationUrl>
+		</developer>
+	</developers>
+
+	<groupId>com.stock.process</groupId>
+	<artifactId>stock-proces</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>stock-proces</name>
+	<description>Barco Batch Process</description>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<postgresql.version>42.2.5</postgresql.version>
+		<jpa.version>2.1.8.RELEASE</jpa.version>
+		<disruptor.version>3.4.2</disruptor.version>
+		<swagger.version>2.9.2</swagger.version>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<version>2.1.8.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-bean-validators</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+			<version>2.5.2.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity</artifactId>
+			<version>1.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity-tools</artifactId>
+			<version>2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.6</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
