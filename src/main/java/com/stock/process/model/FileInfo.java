@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.stock.process.enums.FileStatus;
 import com.stock.process.enums.Status;
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 /**
  * @author Nabeel Ahmed
@@ -40,6 +41,9 @@ public class FileInfo {
     @Column(name = "status")
     @Enumerated(EnumType.ORDINAL)
     private Status status;
+
+    @Column(name = "date_created", nullable = false)
+    private Timestamp dateCreated;
 
     public FileInfo() {}
 
@@ -97,6 +101,14 @@ public class FileInfo {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public Timestamp getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(Timestamp dateCreated) {
+        this.dateCreated = dateCreated;
     }
 
     @Override

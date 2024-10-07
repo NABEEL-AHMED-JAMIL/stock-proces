@@ -1,0 +1,63 @@
+<!--add 2 link
+1) index.html show the list of files
+2) upload-file show the button and upload list after upload file & back button
+3) stock exchange data page
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .table-container {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            margin: 20px; /* Optional: Add some margin around the container */
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1 style="text-align: center;">My Stock Process</h1>
+    <nav style="text-align: center;">
+        <a href="/index">Back</a> |
+        <a href="#about">New File</a> |
+        <a href="#services">Stock Statistic</a>
+    </nav>
+</header>
+<div class="table-container">
+    <table border="1">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>File Status</th>
+            <th>Filename</th>
+            <th>Folder</th>
+            <th>Path</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>1</td>
+            <td>Active</td>
+            <td>document.pdf</td>
+            <td>Documents</td>
+            <td>/users/johndoe/documents/document.pdf</td>
+            <td>Completed</td>
+            <td>PDF</td>
+            <td>
+                <button onclick="alert('Process 1 Clicked!')"><i class="fas fa-cogs"></i></button>
+                <button onclick="alert('Download 1 Clicked!')"><i class="fas fa-download"></i></button>
+                <button onclick="alert('Delete 1 Clicked!')"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
