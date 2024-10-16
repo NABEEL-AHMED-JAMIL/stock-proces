@@ -3,6 +3,8 @@ package com.stock.process.util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
@@ -14,8 +16,6 @@ public class BarcoUtil {
     public static Logger logger = LogManager.getLogger(BarcoUtil.class);
 
     public static Object NULL = null;
-    public static String START_DATE = " 00:00:00";
-    public static String END_DATE = " 23:59:59";
     public static String SIMPLE_DATE_PATTERN = "yyyy-MM-dd";
     public static String CONTENT_DISPOSITION ="Content-Disposition";
     public static String FILE_NAME_HEADER = "attachment; filename=";
@@ -61,6 +61,13 @@ public class BarcoUtil {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Method use to get the current month
+     * */
+    public static String currentMonth() {
+        return LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
     }
 
 }

@@ -1,0 +1,47 @@
+﻿{
+    "dataView": {
+        "totalRows": 50,
+        "totalColumns": 50,
+        "columns": [
+            {
+                "name": "Date",
+                "order": 0
+            },
+            {
+                "name": "Open",
+                "order": 1
+            },
+            {
+                "name": "High",
+                "order": 2
+            },
+            {
+                "name": "Low",
+                "order": 3
+            },
+            {
+                "name": "Close",
+                "order": 4
+            },
+            {
+                "name": "Adj Close",
+                "order": 5
+            },
+            {
+                "name": "Volume",
+                "order": 6
+            }
+        ],
+        "rows": [
+            {
+                "text": []
+            },
+            {
+                "text": []
+            },
+            {
+                "text": []
+            }
+        ]
+    }
+}

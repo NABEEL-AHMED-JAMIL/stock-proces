@@ -3,7 +3,7 @@ package com.stock.process.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
-
+import com.stock.process.enums.Status;
 import javax.persistence.*;
 import java.sql.Date;
 
@@ -46,7 +46,16 @@ public class StockPrice {
     @JoinColumn(name = "file_id")
     private FileInfo fileInfo; // each file process reference
 
+    @Column(name = "status")
+    @Enumerated(EnumType.ORDINAL)
+    private Status status;
+
     public StockPrice() {}
+
+    @PrePersist
+    protected void onCreate() {
+        this.status = Status.Active;
+    }
 
     public Long getId() {
         return id;
@@ -118,6 +127,14 @@ public class StockPrice {
 
     public void setFileInfo(FileInfo fileInfo) {
         this.fileInfo = fileInfo;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     @Override

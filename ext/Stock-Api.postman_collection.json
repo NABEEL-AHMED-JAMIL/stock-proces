@@ -1,0 +1,41 @@
+{
+	"info": {
+		"_postman_id": "ff286ce6-252e-4ddd-9ef3-05aef043f745",
+		"name": "Stock-Api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37677506"
+	},
+	"item": [
+		{
+			"name": "http://localhost:9097/action.json/uploadFile",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "files[0]",
+							"description": "File For Test",
+							"type": "file",
+							"src": "/C:/VPN-Detail/vpn-detail.txt"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:9097/action.json/uploadFile",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9097",
+					"path": [
+						"action.json",
+						"uploadFile"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

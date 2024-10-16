@@ -1,25 +1,110 @@
-<!--add 2 link
-1) index.html show the list of files
-2) upload-file show the button and upload list after upload file & back button
-3) stock exchange data page
--->
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Index Page</title>
+        <title>Upload File</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }
+            header {
+                background-color: #333;
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin: 0 15px;
+                font-size: 18px;
+            }
+            nav a:hover {
+                text-decoration: underline;
+            }
+            .table-container {
+                display: flex;
+                justify-content: center;
+                margin: 20px auto;
+                width: 90%;
+            }
+            form {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            label {
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+            input[type="file"] {
+                margin-bottom: 15px;
+                padding: 5px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                width: 100%;
+            }
+            button {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            button:hover {
+                background-color: #45a049;
+            }
+            .message {
+                text-align: center;
+                font-weight: bold;
+                margin-top: 15px;
+            }
+            .error-message {
+                color: red;
+            }
+            .success-message {
+                color: green;
+            }
+        </style>
     </head>
     <body>
+        <!-- Header -->
         <header>
-            <h1>My Stock Process</h1>
             <nav>
-                <a href="#about">View Statistic</a> |
-                <a href="#services">Upload File</a>
+                <a th:href="@{/fetchFileListByDate(date=${date}, pageNumber=${pageNumber}, pageSize=${pageSize})}" target="_self">View Files</a>
+                <a th:href="@{/stock-exchange-data}" target="_self">Stock Data</a>
             </nav>
         </header>
-        <section id="fileList">
-            <h2>Upload Stock File</h2>
-        </section>
+
+        <div class="table-container">
+            <!-- Upload file form -->
+            <form th:action="@{/uploadFile}" method="post" enctype="multipart/form-data">
+                <label for="file">Select a file:</label>
+                <input type="file" id="file" name="file" required />
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+        <div class="table-container">
+            <!-- Error message display -->
+            <div th:if="${appResponse != null && appResponse.status == 'ERROR'}" class="message error-message">
+                <p th:text="${appResponse.message}"></p>
+            </div>
+            <!-- Success message display -->
+            <div th:if="${appResponse != null && appResponse.status == 'SUCCESS'}" class="message success-message">
+                <p th:text="${appResponse.message}"></p>
+            </div>
+        </div>
     </body>
 </html>

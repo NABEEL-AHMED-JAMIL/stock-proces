@@ -7,12 +7,21 @@ import com.stock.process.enums.FileStatus;
 import com.stock.process.enums.Status;
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 /**
  * @author Nabeel Ahmed
  */
 @Entity
 @Table(name = "file_info")
+@SqlResultSetMapping(
+    name = "StatisticDtoMapping",
+    columns = {
+        @ColumnResult(name = "date", type = LocalDate.class),
+        @ColumnResult(name = "fileStatus", type = FileStatus.class),
+        @ColumnResult(name = "totalCount", type = Long.class)
+    }
+)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileInfo {
@@ -34,6 +43,9 @@ public class FileInfo {
     @Column(name = "path", nullable = false)
     private String path;
 
+    @Column(name = "segment_path")
+    private String segmentPath;
+
     @Column(name = "file_status")
     @Enumerated(EnumType.ORDINAL)
     private FileStatus fileStatus;
@@ -44,6 +56,11 @@ public class FileInfo {
 
     @Column(name = "date_created", nullable = false)
     private Timestamp dateCreated;
+
+    @PrePersist
+    public void onCreate() {
+        this.dateCreated = new Timestamp((System.currentTimeMillis()));
+    }
 
     public FileInfo() {}
 
@@ -85,6 +102,14 @@ public class FileInfo {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getSegmentPath() {
+        return segmentPath;
+    }
+
+    public void setSegmentPath(String segmentPath) {
+        this.segmentPath = segmentPath;
     }
 
     public FileStatus getFileStatus() {

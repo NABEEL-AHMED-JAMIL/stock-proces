@@ -1,15 +1,30 @@
 package com.stock.process.service.impl;
 
-import com.stock.process.dto.AppResponse;
-import com.stock.process.dto.FileUploadRequest;
+import com.stock.process.dto.*;
 import com.stock.process.efs.EfsFileExchange;
+import com.stock.process.enums.FileStatus;
+import com.stock.process.enums.Status;
+import com.stock.process.model.AuditLog;
+import com.stock.process.model.FileInfo;
 import com.stock.process.repository.AuditLogRepository;
 import com.stock.process.repository.FileInfoRepository;
+import com.stock.process.repository.StockPriceRepository;
 import com.stock.process.service.FileInfoService;
+import com.stock.process.util.BarcoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.*;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Nabeel Ahmed
@@ -19,14 +34,38 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     private Logger logger = LoggerFactory.getLogger(FileInfoServiceImpl.class);
 
+    private final String ROOT_PATH = "C:/stock-price/";
+    private final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
+        "text/csv",  // MIME type for CSV
+        "application/octet-stream", // Generic binary
+        "text/plain", // MIME type for TXT
+        "application/x-parquet" // MIME type for Parquet (update if needed)
+    );
     @Autowired
     private FileInfoRepository fileInfoRepository;
     @Autowired
     private AuditLogRepository auditLogRepository;
     @Autowired
+    private StockPriceRepository stockPriceRepository;
+    @Autowired
     private EfsFileExchange efsFileExchange;
 
     public FileInfoServiceImpl() {}
+
+    /**
+     * Method use to fetch the count by month
+     * @param month
+     * @return AppResponse
+     * @throws Exception
+     * */
+    @Override
+    public AppResponse fetchFileCountByMonth(String month) throws Exception {
+        logger.info("FileInfoServiceImpl :: fetchFileCountByMonth -> call month={} ", month);
+        Map<String, List<StatisticDto>> statistics = new HashMap<>();
+        statistics.put("daily_count", this.fileInfoRepository.findFileInfoCountsByMonth(month));
+        statistics.put("daily_count_by_status", this.fileInfoRepository.findFileCountGroupedByDateAndStatus(month));
+        return new AppResponse(BarcoUtil.ERROR, "Fetch successfully.", statistics);
+    }
 
     /**
      * Method use to fetch file list by date
@@ -37,12 +76,37 @@ public class FileInfoServiceImpl implements FileInfoService {
      * @throws Exception
      * */
     @Override
-    public AppResponse fetchFileListByDate(String date, Integer pageNumber, Integer pageSize) throws Exception {
-        logger.info("FileInfoServiceImpl :: fetchFileListByDate -> call date=%s pageNumber=%d pageSize=%d", date, pageNumber, pageSize);
-        // check is valid date
-        // check is valid page pageNumber
-        // check is valid page size
-        return null;
+    public Page<FileInfoDto> fetchFileListByDate(String date, Integer pageNumber, Integer pageSize) throws Exception {
+        logger.info("FileInfoServiceImpl :: fetchFileListByDate -> call date={} pageNumber={} pageSize={}", date, pageNumber, pageSize);
+        if (BarcoUtil.isBlank(date)) {
+            throw new Exception(String.format("Invalid: Data %s.", date));
+        } else if (BarcoUtil.isNull(pageNumber) || pageNumber <= 0) {
+            throw new Exception(String.format("Invalid: PageNumber %s.", pageNumber));
+        } else if (BarcoUtil.isNull(pageSize)) {
+            throw new Exception(String.format("Invalid: PageSize %s.", pageSize));
+        }
+        // if the page is 1 so we check in the zero index so [page number = page number -1]
+        pageNumber = pageNumber - 1;
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+        Page<FileInfo> response = this.fileInfoRepository.findAllByDateCreated(Date.valueOf(LocalDate.parse(date)), pageRequest);
+        return new PageImpl<>(response.get().map(this::getFileInfoDto).collect(Collectors.toList()), pageRequest, response.getTotalElements());
+    }
+
+    /**
+     * Method use to fetch file audit logs
+     * @param fileId
+     * @return AppResponse
+     * @throws Exception
+     * */
+    @Override
+    public AppResponse fetchFileAuditLog(Integer fileId) throws Exception {
+        logger.info("FileInfoServiceImpl :: fetchFileAuditLog -> call fileId={} ", fileId);
+        Optional<FileInfo> fileInfo =  this.fileInfoRepository.findById(Long.valueOf(fileId));
+        if (!fileInfo.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, "File info not found with id.");
+        }
+        String message = String.format("Audit Log History Detail [%s], [%s] ", fileInfo.get().getFilename(), fileInfo.get().getType());
+        return new AppResponse(BarcoUtil.SUCCESS, message, this.auditLogRepository.findAllByFileInfo(fileInfo.get()).stream().map(this::getAuditLogDto).collect(Collectors.toList()));
     }
 
     /**
@@ -52,9 +116,51 @@ public class FileInfoServiceImpl implements FileInfoService {
      * @throws Exception
      * */
     @Override
-    public AppResponse uploadFile(FileUploadRequest payload) throws Exception {
-        return null;
+    public AppResponse uploadFile(FileUploadRequest payload, boolean isMultiple) throws Exception {
+        logger.info("FileInfoServiceImpl :: uploadFile -> call");
+        String folderPath = ROOT_PATH + LocalDate.now();  // Create a folder based on today's date
+        // Check if the folder exists or can be created
+        if (!this.efsFileExchange.makeDir(folderPath)) {
+            return new AppResponse(BarcoUtil.ERROR, String.format("%s not exist", folderPath));
+        }
+        // Validate the file type (single or multiple files)
+        if (!isMultiple && !this.isValidFileType(Collections.singletonList(payload.getFile()))) {
+            return new AppResponse(BarcoUtil.ERROR, "Invalid file type. Allowed types: CSV, Parquet, TXT.");
+        } else if (isMultiple && !this.isValidFileType(payload.getFiles())) {
+            return new AppResponse(BarcoUtil.ERROR, "Invalid file type. Allowed types: CSV, Parquet, TXT.");
+        }
+        // Determine the list of files (single or multiple)
+        List<MultipartFile> files = isMultiple ? payload.getFiles() : Collections.singletonList(payload.getFile());
+        // Process each file
+        for (MultipartFile newFile : files) {
+            try {
+                String filename = newFile.getOriginalFilename();
+                FileInfo fileInfo = new FileInfo();
+                // Set the folder, path, and other metadata for the file
+                fileInfo.setFolder(folderPath);  // root path + date folder
+                fileInfo.setPath(folderPath.concat("/" + filename));  // Full path for file saving
+                fileInfo.setFilename(filename);
+                fileInfo.setType(this.getDocumentType(newFile));  // Set file type based on content
+                fileInfo.setFileStatus(FileStatus.Pending);  // Set initial status
+                fileInfo.setStatus(Status.Active);
+                // Save the file using efsFileExchange to store
+                this.efsFileExchange.saveFile(convertFileToByteArrayOutputStream(newFile), fileInfo.getPath());
+                // Save file metadata into the repository
+                fileInfo = this.fileInfoRepository.save(fileInfo);
+                // save the audit log
+                AuditLog auditLog = new AuditLog();
+                auditLog.setLogsDetail(String.format("%s file save with pending status.", fileInfo.getFilename()));
+                auditLog.setFileInfo(fileInfo);
+                this.auditLogRepository.save(auditLog);
+            } catch (Exception ex) {
+                // Log the error and throw a runtime exception to halt the process
+                logger.error("Error while processing file: " + newFile.getOriginalFilename(), ex);
+                throw new RuntimeException("File processing failed for: " + newFile.getOriginalFilename(), ex);
+            }
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, "File(s) saved successfully.");
     }
+
 
     /**
      * Method use to download file by id
@@ -64,7 +170,24 @@ public class FileInfoServiceImpl implements FileInfoService {
      * */
     @Override
     public AppResponse downloadFileById(Long fileId) throws Exception {
-        return null;
+        logger.info("FileInfoServiceImpl :: downloadFileById -> call fileId={}", fileId);
+        Optional<FileInfo> fileInfo = this.fileInfoRepository.findById(fileId);
+        // Check if the file exists
+        if (!fileInfo.isPresent()) {
+            throw new NoSuchElementException("File not found with ID: " + fileId);
+        }
+        Map<String, Object> fileDetail = new HashMap<>();
+        fileDetail.put("name", fileInfo.get().getFilename()); // File name
+        // Convert file to byte array
+        try {
+            File file = new File(fileInfo.get().getPath()); // Get the file object
+            byte[] fileBytes = convertFileToByteArray(file); // Convert to byte array
+            fileDetail.put("content", fileBytes); // Add the byte array to details
+        } catch (IOException ioException) {
+            logger.error("IO exception while reading the file: {}", ioException.getMessage());
+            throw new Exception("Error reading file content", ioException);
+        }
+        return new AppResponse(BarcoUtil.SUCCESS, "File fetched successfully.", fileDetail);
     }
 
     /**
@@ -74,7 +197,136 @@ public class FileInfoServiceImpl implements FileInfoService {
      * @throws Exception
      * */
     @Override
-    public AppResponse deleteFileById(Long fileId) throws Exception {
-        return null;
+    public void deleteFileById(Long fileId) throws Exception {
+        logger.info("FileInfoServiceImpl :: deleteFileById -> call fileId={}", fileId);
+        Optional<FileInfo> fileInfo = this.fileInfoRepository.findById(fileId);
+        // Check if the file exists
+        if (!fileInfo.isPresent()) {
+            throw new NoSuchElementException("File not found with ID: " + fileId);
+        }
+        fileInfo.get().setStatus(Status.Delete);
+        // file info delete
+        this.fileInfoRepository.save(fileInfo.get());
+        // delete the audit logs
+        this.auditLogRepository.updateStatusByFileId(Status.Delete, fileInfo.get());
+        // stock-price
+        this.stockPriceRepository.updateStatusByFileId(Status.Delete, fileInfo.get());
+    }
+
+    /**
+     * Method use to run the file by id
+     * @param fileId
+     * */
+    @Override
+    public void runFileById(Long fileId) throws Exception {
+        logger.info("FileInfoServiceImpl :: runFileById -> call fileId={}", fileId);
+        Optional<FileInfo> fileInfo = this.fileInfoRepository.findById(fileId);
+        // Check if the file exists
+        if (!fileInfo.isPresent()) {
+            throw new NoSuchElementException("File not found with ID: " + fileId);
+        }
+        fileInfo.get().setFileStatus(FileStatus.Queue);
+        this.fileInfoRepository.save(fileInfo.get());
+        // Create and save the audit log
+        AuditLog auditLog = new AuditLog();
+        auditLog.setLogsDetail(String.format("Process change for [%s] [Pending => Queue] status.", fileInfo.get().getFilename()));
+        auditLog.setFileInfo(fileInfo.get());
+        this.auditLogRepository.save(auditLog);
+    }
+
+    /**
+     * Method use to return the file info dto
+     * @param fileInfo
+     * @return FileInfoDto
+     * */
+    private FileInfoDto getFileInfoDto(FileInfo fileInfo) {
+        FileInfoDto fileInfoDto = new FileInfoDto();
+        fileInfoDto.setId(fileInfo.getId());
+        fileInfoDto.setFolder(fileInfo.getFolder());
+        fileInfoDto.setFilename(fileInfo.getFilename());
+        fileInfoDto.setType(fileInfo.getType());
+        fileInfoDto.setPath(fileInfo.getPath());
+        fileInfoDto.setFileStatus(fileInfo.getFileStatus());
+        fileInfoDto.setStatus(fileInfo.getStatus());
+        return fileInfoDto;
+    }
+
+    /**
+     * Method use to return the audit log info
+     * @param auditLog
+     * @return AuditLogDto
+     * */
+    private AuditLogDto getAuditLogDto(AuditLog auditLog) {
+        AuditLogDto auditLogDto = new AuditLogDto();
+        auditLogDto.setId(auditLog.getId());
+        auditLogDto.setDateCreated(auditLog.getDateCreated());
+        auditLogDto.setLogsDetail(auditLog.getLogsDetail());
+        return auditLogDto;
+    }
+
+    /**
+     * Method use to check the file type
+     * @param files
+     * @return boolean
+     * */
+    private boolean isValidFileType(List<MultipartFile> files) {
+        for (MultipartFile file : files) {
+            String contentType = file.getContentType();
+            System.out.println("Uploaded file content type: " + contentType);
+            if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
+                return false;  // Return false immediately if any file has an invalid content type
+            }
+        }
+        return true;  // Return true only if all files are valid
+    }
+
+    /**
+     * Method use to get the doc type
+     * @param file
+     * */
+    private String getDocumentType(MultipartFile file) {
+        switch (file.getContentType()) {
+            case "text/csv":
+                return "CSV";
+            case "text/plain":
+                return "TXT";
+            case "application/x-parquet":
+                return "PARQUET";
+            default:
+                return null; // Invalid type
+        }
+    }
+
+    /**
+     * Method use to convert file to byte array
+     * @param file
+     * @throws IOException
+     * */
+    private ByteArrayOutputStream convertFileToByteArrayOutputStream(MultipartFile file) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (InputStream inputStream = file.getInputStream()) {
+            byte[] buffer = new byte[1024]; // Buffer size can be adjusted
+            int bytesRead;
+            // Read from the InputStream and write to the ByteArrayOutputStream
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+            }
+        }
+        return byteArrayOutputStream;
+    }
+
+    // Method to convert File to byte array
+    private byte[] convertFileToByteArray(File file) throws IOException {
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            // Read the file content
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+            }
+            // Convert ByteArrayOutputStream to byte array
+            return byteArrayOutputStream.toByteArray();
+        }
     }
 }
