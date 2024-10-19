@@ -163,8 +163,8 @@ public class BatchProcessRestApi {
     }
 
     /**
-     * @apiName :- deleteFileById
-     * @apiNote :- Api use to delete file by id
+     * @apiName :- runFileById
+     * @apiNote :- Api use to run file by id
      * @param fileId
      * @return ResponseEntity<?>
      * */
