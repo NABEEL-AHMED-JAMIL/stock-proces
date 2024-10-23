@@ -3,9 +3,6 @@ package com.stock.process.util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -18,10 +15,8 @@ public class BarcoUtil {
 
     public static Logger logger = LogManager.getLogger(BarcoUtil.class);
 
-    public static Object NULL = null;
     public static String SIMPLE_DATE_PATTERN = "yyyy-MM-dd";
     public static String CONTENT_DISPOSITION ="Content-Disposition";
-    public static String FILE_NAME_HEADER = "attachment; filename=";
     public static String ERROR = "ERROR";
     public static String SUCCESS = "SUCCESS";
 
