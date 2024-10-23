@@ -28,7 +28,7 @@ public class BarcoUtil {
     public BarcoUtil() {}
 
     public static boolean isNull(Object payload) {
-        return payload == null || payload == "" ? true : false;
+        return payload == null || payload == "";
     }
 
     public static boolean isNotBlank(String s) {
@@ -40,19 +40,19 @@ public class BarcoUtil {
     }
 
     public static boolean isNull(Long log) {
-        return log == null ? true : false;
+        return log == null;
     }
 
     public static boolean isNull(String str) {
-        return (str == null || str.trim().isEmpty()) ? true : false;
+        return str == null || str.trim().isEmpty();
     }
 
     public static boolean isNull(Boolean bool) {
-        return (bool == null) ? true : false;
+        return bool == null;
     }
 
     public static boolean isNull(Double dou) {
-        return (dou == null) ? true : false;
+        return dou == null;
     }
 
     public static boolean isNull(Date dt) {

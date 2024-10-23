@@ -99,7 +99,7 @@ public class StockPriceProcessor implements Runnable {
      * */
     private void readCSVFile() throws Exception {
         File file = this.efsFileExchange.getFile(this.fileInfo.getPath());
-        JsonObject jsonObject = this.getJsonObject(FileUtils.readLines(file, "UTF-8"));
+        JsonObject jsonObject = getJsonObject(FileUtils.readLines(file, "UTF-8"));
         // Convert JsonObject to JSON string using Gson
         String segmentPath = this.fileInfo.getFolder().concat("/").concat(this.fileInfo.getFilename().replace(".csv",".json"));
         this.fileInfo.setSegmentPath(segmentPath);

@@ -43,7 +43,7 @@ public class ExceptionUtil {
      * */
     private static List<Throwable> getThrowableList(Throwable throwable) {
         final List<Throwable> list = new ArrayList<Throwable>();
-        while (throwable != null && list.contains(throwable) == false) {
+        while (throwable != null && !list.contains(throwable)) {
             list.add(throwable);
             throwable = throwable.getCause();
         }
