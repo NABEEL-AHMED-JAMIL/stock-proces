@@ -19,7 +19,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.*;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -59,12 +58,18 @@ public class FileInfoServiceImpl implements FileInfoService {
      * @throws Exception
      * */
     @Override
-    public AppResponse fetchFileCountByMonth(String month) throws Exception {
-        logger.info("FileInfoServiceImpl :: fetchFileCountByMonth -> call month={} ", month);
+    public AppResponse fetchFileCount(String month) throws Exception {
+        logger.info("FileInfoServiceImpl :: fetchFileCount -> call month={} ", month);
         Map<String, List<StatisticDto>> statistics = new HashMap<>();
-        statistics.put("daily_count", this.fileInfoRepository.findFileInfoCountsByMonth(month));
-        statistics.put("daily_count_by_status", this.fileInfoRepository.findFileCountGroupedByDateAndStatus(month));
-        return new AppResponse(BarcoUtil.ERROR, "Fetch successfully.", statistics);
+        // daily count by file type like csv = 20, txt = 23, xlsx = 200
+        statistics.put("today_count_by_type", this.fileInfoRepository.fetchFileInfoCountsTodayByType());
+        // daily count by month
+        statistics.put("current_month_daily_count", this.fileInfoRepository.fetchFileInfoCurrentMonthDailyCount(month));
+        // daily count by current month and status
+        statistics.put("current_month_daily_count_by_file_status", this.fileInfoRepository.fetchFileInfoCurrentMonthDailyCountByFileStatus(month));
+        // type mean [csv and date] count and [txt and date] count
+        statistics.put("current_month_daily_count_by_type", this.fileInfoRepository.fetchFileInfoCurrentMonthDailyCountByType(month));
+        return new AppResponse(BarcoUtil.SUCCESS, "Fetch successfully.", statistics);
     }
 
     /**
@@ -89,7 +94,11 @@ public class FileInfoServiceImpl implements FileInfoService {
         pageNumber = pageNumber - 1;
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
         Page<FileInfo> response = this.fileInfoRepository.findAllByDateCreated(Date.valueOf(LocalDate.parse(date)), pageRequest);
-        return new PageImpl<>(response.get().map(this::getFileInfoDto).collect(Collectors.toList()), pageRequest, response.getTotalElements());
+        List<FileInfoDto> arrays = new ArrayList<>();
+         for(FileInfo fileInfo: response) {
+             arrays.add(this.getFileInfoDto(fileInfo));
+         }
+        return new PageImpl<>(arrays, pageRequest, response.getTotalElements());
     }
 
     /**
@@ -116,7 +125,7 @@ public class FileInfoServiceImpl implements FileInfoService {
      * @throws Exception
      * */
     @Override
-    public AppResponse uploadFile(FileUploadRequest payload, boolean isMultiple) throws Exception {
+    public AppResponse uploadFile(FileUploadRequest payload) throws Exception {
         logger.info("FileInfoServiceImpl :: uploadFile -> call");
         String folderPath = ROOT_PATH + LocalDate.now();  // Create a folder based on today's date
         // Check if the folder exists or can be created
@@ -124,13 +133,10 @@ public class FileInfoServiceImpl implements FileInfoService {
             return new AppResponse(BarcoUtil.ERROR, String.format("%s not exist", folderPath));
         }
         // Validate the file type (single or multiple files)
-        if (!isMultiple && !this.isValidFileType(Collections.singletonList(payload.getFile()))) {
-            return new AppResponse(BarcoUtil.ERROR, "Invalid file type. Allowed types: CSV, Parquet, TXT.");
-        } else if (isMultiple && !this.isValidFileType(payload.getFiles())) {
+        List<MultipartFile> files = Collections.singletonList(payload.getFile());
+        if (!this.isValidFileType(files)) {
             return new AppResponse(BarcoUtil.ERROR, "Invalid file type. Allowed types: CSV, Parquet, TXT.");
         }
-        // Determine the list of files (single or multiple)
-        List<MultipartFile> files = isMultiple ? payload.getFiles() : Collections.singletonList(payload.getFile());
         // Process each file
         for (MultipartFile newFile : files) {
             try {
@@ -154,7 +160,7 @@ public class FileInfoServiceImpl implements FileInfoService {
                 this.auditLogRepository.save(auditLog);
             } catch (Exception ex) {
                 // Log the error and throw a runtime exception to halt the process
-                logger.error("Error while processing file: " + newFile.getOriginalFilename(), ex);
+                logger.error("Error while processing file: {}", newFile.getOriginalFilename(), ex);
                 throw new RuntimeException("File processing failed for: " + newFile.getOriginalFilename(), ex);
             }
         }
@@ -245,6 +251,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         fileInfoDto.setFolder(fileInfo.getFolder());
         fileInfoDto.setFilename(fileInfo.getFilename());
         fileInfoDto.setType(fileInfo.getType());
+        fileInfoDto.setSegmentPath(fileInfo.getSegmentPath());
         fileInfoDto.setPath(fileInfo.getPath());
         fileInfoDto.setFileStatus(fileInfo.getFileStatus());
         fileInfoDto.setStatus(fileInfo.getStatus());
@@ -285,12 +292,13 @@ public class FileInfoServiceImpl implements FileInfoService {
      * @param file
      * */
     private String getDocumentType(MultipartFile file) {
-        switch (file.getContentType()) {
+        switch (Objects.requireNonNull(file.getContentType())) {
             case "text/csv":
                 return "CSV";
             case "text/plain":
                 return "TXT";
             case "application/x-parquet":
+            case "application/octet-stream":
                 return "PARQUET";
             default:
                 return null; // Invalid type

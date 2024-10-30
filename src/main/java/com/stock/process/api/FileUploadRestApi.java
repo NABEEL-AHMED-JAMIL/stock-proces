@@ -40,10 +40,10 @@ public class FileUploadRestApi {
     @RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
     public ResponseEntity<?> uploadFile(FileUploadRequest payload) {
         try {
-            if (!BarcoUtil.isNull(payload.getFiles()) && payload.getFiles().size() > 5) {
-                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, "Max 5 file allow"), HttpStatus.BAD_REQUEST);
+            if (BarcoUtil.isNull(payload.getFile())) {
+                return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, "File not be null"), HttpStatus.BAD_REQUEST);
             }
-            return new ResponseEntity<>(this.fileInfoService.uploadFile(payload, true), HttpStatus.OK);
+            return new ResponseEntity<>(this.fileInfoService.uploadFile(payload), HttpStatus.OK);
         } catch (Exception ex) {
             logger.error("An error occurred while uploadLookup ", ExceptionUtil.getRootCause(ex));
             return new ResponseEntity<>(new AppResponse(BarcoUtil.ERROR, ex.getMessage()), HttpStatus.BAD_REQUEST);

@@ -39,6 +39,9 @@ public class StockPriceProcessor implements Runnable {
         this.auditLogRepository = auditLogRepository;
     }
 
+    /**
+     * Thread use to convert the csv and par file to json file
+     * */
     @Override
     public void run() {
         long startTime = System.currentTimeMillis();

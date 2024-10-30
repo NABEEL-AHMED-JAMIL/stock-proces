@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.stock.process.enums.FileStatus;
 import com.stock.process.enums.Status;
-
-import java.time.LocalDate;
+import java.sql.Timestamp;
 
 /**
  * @author Nabeel Ahmed
@@ -20,10 +19,20 @@ public class FileInfoDto {
     private String filename;
     private String type;
     private String path;
+    private String segmentPath;
     private FileStatus fileStatus;
     private Status status;
+    private Timestamp dateCreated;
 
     public FileInfoDto() {}
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
 
     public Long getId() {
         return id;
@@ -39,14 +48,6 @@ public class FileInfoDto {
 
     public void setFolder(String folder) {
         this.folder = folder;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
     }
 
     public String getType() {
@@ -65,6 +66,14 @@ public class FileInfoDto {
         this.path = path;
     }
 
+    public String getSegmentPath() {
+        return segmentPath;
+    }
+
+    public void setSegmentPath(String segmentPath) {
+        this.segmentPath = segmentPath;
+    }
+
     public FileStatus getFileStatus() {
         return fileStatus;
     }
@@ -79,6 +88,14 @@ public class FileInfoDto {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public Timestamp getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(Timestamp dateCreated) {
+        this.dateCreated = dateCreated;
     }
 
     @Override

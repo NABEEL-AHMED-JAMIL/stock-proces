@@ -10,13 +10,13 @@ import org.springframework.data.domain.Page;
  */
 public interface FileInfoService {
 
-    public AppResponse fetchFileCountByMonth(String month) throws Exception;
+    public AppResponse fetchFileCount(String month) throws Exception;
 
     public Page<FileInfoDto> fetchFileListByDate(String date, Integer pageNumber, Integer pageSize) throws Exception;
 
     public AppResponse fetchFileAuditLog(Integer fileId) throws Exception;
 
-    public AppResponse uploadFile(FileUploadRequest payload, boolean isMultiple) throws Exception;
+    public AppResponse uploadFile(FileUploadRequest payload) throws Exception;
 
     public AppResponse downloadFileById(Long fileId) throws Exception;
 

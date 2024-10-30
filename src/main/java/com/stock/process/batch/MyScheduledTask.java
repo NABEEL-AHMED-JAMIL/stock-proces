@@ -43,7 +43,7 @@ public class MyScheduledTask {
     @SchedulerLock(name = "stockFile_queueTask", lockAtLeastFor = "5S", lockAtMostFor = "10M")
     public void queueTask() {
         logger.info("queueTask :: start time [ {} ] ms", System.currentTimeMillis());
-        this.fileInfoRepository.findTop10ByStatusAndFileStatus(Status.Active, FileStatus.Pending, PageRequest.of(page, size))
+        this.fileInfoRepository.findTop20ByStatusAndFileStatus(Status.Active, FileStatus.Pending, PageRequest.of(page, size))
         .forEach(fileInfo -> {
             fileInfo.setFileStatus(FileStatus.Queue);
             this.fileInfoRepository.save(fileInfo);
@@ -52,7 +52,6 @@ public class MyScheduledTask {
             auditLog.setLogsDetail(String.format("Process change for [%s] [Pending => Queue] status.", fileInfo.getFilename()));
             auditLog.setFileInfo(fileInfo);
             this.auditLogRepository.save(auditLog);
-
         });
         logger.info("queueTask :: end time [ {} ] ms", System.currentTimeMillis());
     }
@@ -64,7 +63,7 @@ public class MyScheduledTask {
     @SchedulerLock(name = "stockFile_runTask", lockAtLeastFor = "5S", lockAtMostFor = "10M")
     public void runTask() {
         logger.info("runTask :: start time [ {} ] ms", System.currentTimeMillis());
-        this.fileInfoRepository.findTop10ByStatusAndFileStatus(Status.Active, FileStatus.Queue, PageRequest.of(page, size))
+        this.fileInfoRepository.findTop20ByStatusAndFileStatus(Status.Active, FileStatus.Queue, PageRequest.of(page, size))
             .forEach(fileInfo -> {
                 StockPriceProcessor stockPriceProcessor = new StockPriceProcessor(efsFileExchange, fileInfoRepository, auditLogRepository);
                 stockPriceProcessor.setFileInfo(fileInfo);

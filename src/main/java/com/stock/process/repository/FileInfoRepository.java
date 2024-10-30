@@ -19,23 +19,39 @@ import java.util.List;
 @Repository
 public interface FileInfoRepository extends CrudRepository<FileInfo, Long> {
 
-    @Query("SELECT f FROM FileInfo f WHERE DATE(f.dateCreated) = :dateCreated")
+    @Query(value = "SELECT f.type AS fileType, COUNT(*) AS totalCount " +
+        "FROM file_info f " +
+        "WHERE DATE(f.date_created) = CURRENT_DATE AND f.status = 0 " +
+        "GROUP BY fileType",
+        nativeQuery = true)
+    public List<StatisticDto> fetchFileInfoCountsTodayByType();
+
+    @Query(value = "SELECT TO_CHAR(f.date_created, 'YYYY-MM-DD') AS date, COUNT(*) AS totalCount " +
+        "FROM file_info f " +
+        "WHERE TO_CHAR(f.date_created, 'YYYY-MM') = :month AND f.status = 0 " +
+        "GROUP BY date",
+        nativeQuery = true)
+    public List<StatisticDto> fetchFileInfoCurrentMonthDailyCount(@Param("month") String month);
+
+    @Query(value = "SELECT TO_CHAR(f.date_created, 'YYYY-MM-DD') AS date, f.file_status AS fileStatus, COUNT(f) AS totalCount " +
+        "FROM file_info f " +
+        "WHERE TO_CHAR(f.date_created, 'YYYY-MM') = :month AND f.status = 0 " +
+        "GROUP BY date, f.file_status",
+        nativeQuery = true)
+    public List<StatisticDto> fetchFileInfoCurrentMonthDailyCountByFileStatus(@Param("month") String month);
+
+    @Query(value = "SELECT TO_CHAR(f.date_created, 'YYYY-MM-DD') AS date, f.type AS fileType, COUNT(*) AS totalCount " +
+        "FROM file_info f " +
+        "WHERE TO_CHAR(f.date_created, 'YYYY-MM') = :month AND f.status = 0 " +
+        "GROUP BY date, fileType " +
+        "ORDER BY date ASC",
+        nativeQuery = true)
+    public List<StatisticDto> fetchFileInfoCurrentMonthDailyCountByType(@Param("month") String month);
+
+    @Query("SELECT f FROM FileInfo f WHERE DATE(f.dateCreated) = :dateCreated ORDER BY f.id desc")
     public Page<FileInfo> findAllByDateCreated(@Param("dateCreated") Date dateCreated, Pageable pageable);
 
-    @Query(value = "SELECT TO_CHAR(date_created, 'YYYY-MM-DD') AS date, COUNT(*) AS totalCount " +
-        "FROM file_info " +
-        "WHERE TO_CHAR(date_created, 'YYYY-MM') = :month AND status = 1 " +
-        "GROUP BY TO_CHAR(date_created, 'YYYY-MM-DD')",
-        nativeQuery = true)
-    public List<StatisticDto> findFileInfoCountsByMonth(@Param("month") String month);
-
-    @Query("SELECT TO_CHAR(f.dateCreated, 'YYYY-MM-DD') AS date, f.fileStatus AS fileStatus, COUNT(f) AS totalCount " +
-        "FROM FileInfo f " +
-        "WHERE TO_CHAR(f.dateCreated, 'YYYY-MM') = :month AND status = 1  " +
-        "GROUP BY TO_CHAR(f.dateCreated, 'YYYY-MM-DD'), f.fileStatus")
-    public List<StatisticDto> findFileCountGroupedByDateAndStatus(@Param("month") String month);
-
     @Query("SELECT f FROM FileInfo f WHERE f.status = :status AND f.fileStatus = :fileStatus ORDER BY f.id ASC")
-    public List<FileInfo> findTop10ByStatusAndFileStatus(@Param("status") Status status, @Param("fileStatus") FileStatus fileStatus, Pageable pageable);
+    public List<FileInfo> findTop20ByStatusAndFileStatus(@Param("status") Status status, @Param("fileStatus") FileStatus fileStatus, Pageable pageable);
 
 }
