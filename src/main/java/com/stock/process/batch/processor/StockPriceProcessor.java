@@ -11,6 +11,7 @@ import com.stock.process.repository.AuditLogRepository;
 import com.stock.process.repository.FileInfoRepository;
 import com.stock.process.util.BarcoUtil;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ public class StockPriceProcessor implements Runnable {
                 this.auditLogMessage("Process change for [%s] [Running => Failed] status due to file not exist or either path not correct.");
                 return;
             }
-            if (this.fileInfo.getType().equals("CSV")) {
+            if (this.fileInfo.getType().equals("CSV") || this.fileInfo.getType().equals("TXT")) {
                 this.readCSVFile();
             } else if (this.fileInfo.getType().equals("PARQUET")) {
                 this.readPARQUETFile();
@@ -78,14 +79,6 @@ public class StockPriceProcessor implements Runnable {
         }
     }
 
-    public FileInfo getFileInfo() {
-        return fileInfo;
-    }
-
-    public void setFileInfo(FileInfo fileInfo) {
-        this.fileInfo = fileInfo;
-    }
-
     /**
      * Message use to add into audit
      * @param message
@@ -101,12 +94,19 @@ public class StockPriceProcessor implements Runnable {
      * Method use to read the csv file and process
      * */
     private void readCSVFile() throws Exception {
-        File file = this.efsFileExchange.getFile(this.fileInfo.getPath());
-        JsonObject jsonObject = getJsonObject(FileUtils.readLines(file, "UTF-8"));
         // Convert JsonObject to JSON string using Gson
-        String segmentPath = this.fileInfo.getFolder().concat("/").concat(this.fileInfo.getFilename().replace(".csv",".json"));
+        String segmentPath = null;
+        if (this.fileInfo.getType().equals("CSV")) {
+            segmentPath = this.fileInfo.getFolder().concat("/")
+                 .concat(this.fileInfo.getFilename().replace(".csv",".json"));
+        } else {
+            segmentPath = this.fileInfo.getFolder().concat("/")
+                 .concat(this.fileInfo.getFilename().replace(".txt",".json"));
+        }
         this.fileInfo.setSegmentPath(segmentPath);
         Gson gson = new Gson();
+        File file = this.efsFileExchange.getFile(this.fileInfo.getPath());
+        JsonObject jsonObject = getJsonObject(FileUtils.readLines(file, "UTF-8"));
         String jsonString = gson.toJson(jsonObject);
         // Create a ByteArrayOutputStream
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -121,8 +121,22 @@ public class StockPriceProcessor implements Runnable {
     /**
      * Method use to read the parquet file and process
      * */
-    private void readPARQUETFile() {
-
+    private void readPARQUETFile() throws Exception {
+//        String segmentPath = this.fileInfo.getFolder().concat("/")
+//            .concat(this.fileInfo.getFilename().replace(".csv",".parquet"));
+//        this.fileInfo.setSegmentPath(segmentPath);
+//        Gson gson = new Gson();
+//        File file = this.efsFileExchange.getFile(this.fileInfo.getPath());
+//        JsonObject jsonObject = getJsonObject(FileUtils.readLines(file, "UTF-8"));
+//        String jsonString = gson.toJson(jsonObject);
+//        // Create a ByteArrayOutputStream
+//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//        // Write the JSON string into the ByteArrayOutputStream as bytes
+//        byteArrayOutputStream.write(jsonString.getBytes(StandardCharsets.UTF_8));
+//        this.efsFileExchange.saveFile(byteArrayOutputStream, this.fileInfo.getSegmentPath());
+//        this.fileInfoRepository.save(this.fileInfo); // the path for segment path
+//        String message = String.format("File creating for [%s]", segmentPath);
+//        this.auditLogMessage("Process action for [%s], "+message);
     }
 
     /**
@@ -130,40 +144,128 @@ public class StockPriceProcessor implements Runnable {
      * @param lines
      * @return JsonObject
      * */
-    private static JsonObject getJsonObject(List<String> lines) {
-        boolean isHeader = true;
+    private JsonObject getJsonObject(List<String> lines) {
         int rowCount = 0;
+        boolean isHeader = true;
+        // Initialize statistics objects
+        DescriptiveStatistics[] statisticsArray = {
+            new DescriptiveStatistics(), // Open
+            new DescriptiveStatistics(), // High
+            new DescriptiveStatistics(), // Low
+            new DescriptiveStatistics(), // Close
+            new DescriptiveStatistics(), // Volume
+            new DescriptiveStatistics()  // OpenInt
+        };
         JsonObject jsonObject = new JsonObject();
         JsonObject dataView = new JsonObject();
         JsonArray rows = new JsonArray();
         for (String line : lines) {
-            String[] values = line.split(","); // Assuming the CSV is comma-separated
+            // Assuming the CSV is comma-separated
+            String[] values = line.split(",");
             if (isHeader) {
                 dataView.addProperty("totalColumns", values.length);
-                JsonArray columns = new JsonArray();
-                for (int i = 0; i < values.length; i++) {
-                    JsonObject column = new JsonObject();
-                    column.addProperty("name", values[i]);
-                    column.addProperty("order", i);
-                    columns.add(column);
-                }
-                dataView.add("columns", columns);
+                dataView.add("columns", this.createColumns(values));
                 isHeader = false;
             } else {
                 rowCount++;
                 JsonObject text = new JsonObject();
-                JsonArray textArray = new JsonArray();
-                for (String value : values) {
-                    textArray.add(value);
-                }
-                text.add("text", textArray);
+                text.add("text", this.createRow(values, statisticsArray));
                 rows.add(text);
             }
         }
+        // Add summary details to dataView
         dataView.addProperty("totalRows", rowCount);
-        dataView.add("rows", rows); // add rows
+        dataView.add("rows", rows);
+        dataView.add("summary", this.createSummary(statisticsArray));
         jsonObject.add("dataView", dataView);
         return jsonObject;
+    }
+
+    /**
+     * Method use to crete the columns
+     * @param headers
+     * @return JsonArray
+     * */
+    private JsonArray createColumns(String[] headers) {
+        JsonArray columns = new JsonArray();
+        for (int index = 0; index < headers.length; index++) {
+            JsonObject column = new JsonObject();
+            column.addProperty("name", headers[index]);
+            column.addProperty("order", index);
+            columns.add(column);
+        }
+        return columns;
+    }
+
+    /**
+     * Method use to create the row
+     * @param values
+     * @param statisticsArray
+     * @return JsonArray
+     * */
+    private JsonArray createRow(String[] values, DescriptiveStatistics[] statisticsArray) {
+        JsonArray textArray = new JsonArray();
+        for (int i = 0; i < values.length; i++) {
+            // Add to respective statistics if index matches expected column position
+            // Assuming columns 1-6 are Open, High, Low, Close, Volume, OpenInt
+            if (i >= 1 && i <= 6) {
+                double value = 0.0;
+                try {
+                    value = Double.parseDouble(values[i]);
+                    statisticsArray[i - 1].addValue(value);
+                    textArray.add(value);
+                } catch (NumberFormatException ex) {
+                    // Log or handle invalid number format
+                    statisticsArray[i - 1].addValue(0.0);
+                    textArray.add(value);
+                    logger.info("createRow :: NumberFormatException {}.", ex.getMessage());
+                }
+            } else {
+                // date for 0 index
+                textArray.add(values[i]);
+            }
+        }
+        return textArray;
+    }
+
+    /**
+     * Method use to create the summary
+     * @param statisticsArray
+     * @return JsonObject
+     * */
+    private JsonObject createSummary(DescriptiveStatistics[] statisticsArray) {
+        JsonObject summary = new JsonObject();
+        String[] keys = {"Open", "High", "Low", "Close", "Volume", "OpenInt"};
+        for (int i = 0; i < statisticsArray.length; i++) {
+            summary.add(keys[i], this.getSummaryDetail(statisticsArray[i]));
+        }
+        return summary;
+    }
+
+    /**
+     * Method to get the summary detail.
+     * @param stats
+     * @return JsonObject
+     */
+    private JsonObject getSummaryDetail(DescriptiveStatistics stats) {
+        JsonObject summaryDetail = new JsonObject();
+        summaryDetail.addProperty("count", stats.getN());
+        summaryDetail.addProperty("mean", stats.getMean());
+        summaryDetail.addProperty("std", stats.getStandardDeviation());
+        summaryDetail.addProperty("min", stats.getMin());
+        summaryDetail.addProperty("max", stats.getMax());
+        summaryDetail.addProperty("firstQuartile", stats.getPercentile(25));
+        summaryDetail.addProperty("median", stats.getPercentile(50));
+        summaryDetail.addProperty("thirdQuartile", stats.getPercentile(75));
+        return summaryDetail;
+    }
+
+    public FileInfo getFileInfo() {
+        return fileInfo;
+    }
+
+    public void setFileInfo(FileInfo fileInfo) {
+        this.fileInfo = fileInfo;
     }
 
 }

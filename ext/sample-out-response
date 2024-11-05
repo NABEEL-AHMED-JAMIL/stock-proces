@@ -1,7 +1,6 @@
 ﻿{
     "dataView": {
-        "totalRows": 50,
-        "totalColumns": 50,
+        "totalColumns": 7,
         "columns": [
             {
                 "name": "Date",
@@ -24,24 +23,100 @@
                 "order": 4
             },
             {
-                "name": "Adj Close",
+                "name": "Volume",
                 "order": 5
             },
             {
-                "name": "Volume",
+                "name": "OpenInt",
                 "order": 6
             }
         ],
+        "totalRows": 1000,
         "rows": [
             {
-                "text": []
+                "text": [
+                    "2023-11-19",
+                    "24.989",
+                    "25.507",
+                    "24.855",
+                    "25.001",
+                    "12602",
+                    "1233"
+                ]
             },
             {
-                "text": []
-            },
-            {
-                "text": []
+                "text": [
+                    "2023-11-19",
+                    "24.792",
+                    "25.436",
+                    "24.489",
+                    "25.09",
+                    "7498",
+                    "4289"
+                ]
             }
-        ]
+        ],
+        "summary": {
+            "Open": {
+                "count": 1050,
+                "mean": 6.859231523809525,
+                "std": 3.7447731382165026,
+                "min": 1.29,
+                "max": 12.42,
+                "firstQuartile": 2.4,
+                "median": 9.58,
+                "thirdQuartile": 10.211500000000001
+            },
+            "High": {
+                "count": 1050,
+                "mean": 6.9870813333333315,
+                "std": 3.7412172041835627,
+                "min": 1.38,
+                "max": 12.73,
+                "firstQuartile": 2.5275,
+                "median": 9.8325,
+                "thirdQuartile": 10.26
+            },
+            "Low": {
+                "count": 1050,
+                "mean": 6.746386761904761,
+                "std": 3.7439582201270896,
+                "min": 1.29,
+                "max": 11.31,
+                "firstQuartile": 2.2975,
+                "median": 9.33,
+                "thirdQuartile": 10.19
+            },
+            "Close": {
+                "count": 1050,
+                "mean": 6.85341142857143,
+                "std": 3.7496795227130093,
+                "min": 1.32,
+                "max": 12.21,
+                "firstQuartile": 2.3875,
+                "median": 9.6,
+                "thirdQuartile": 10.23
+            },
+            "Volume": {
+                "count": 1050,
+                "mean": 118398.1761904772,
+                "std": 984483.8146089733,
+                "min": 0,
+                "max": 25773924,
+                "firstQuartile": 2000,
+                "median": 7593,
+                "thirdQuartile": 34047.5
+            },
+            "OpenInt": {
+                "count": 1050,
+                "mean": 0,
+                "std": 0,
+                "min": 0,
+                "max": 0,
+                "firstQuartile": 0,
+                "median": 0,
+                "thirdQuartile": 0
+            }
+        }
     }
 }

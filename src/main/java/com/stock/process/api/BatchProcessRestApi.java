@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Api use to perform crud operation
@@ -24,8 +23,6 @@ import java.time.format.DateTimeFormatter;
 public class BatchProcessRestApi {
 
     private Logger logger = LoggerFactory.getLogger(BatchProcessRestApi.class);
-
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BarcoUtil.SIMPLE_DATE_PATTERN);
 
     @Autowired
     private FileInfoService fileInfoService;

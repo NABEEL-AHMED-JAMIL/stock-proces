@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 public class FileInfoDto {
 
     private Long id;
+    private String requestId;
     private String folder;
     private String filename;
     private String type;
@@ -26,14 +27,6 @@ public class FileInfoDto {
 
     public FileInfoDto() {}
 
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
     public Long getId() {
         return id;
     }
@@ -42,12 +35,28 @@ public class FileInfoDto {
         this.id = id;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
     public String getFolder() {
         return folder;
     }
 
     public void setFolder(String folder) {
         this.folder = folder;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public String getType() {

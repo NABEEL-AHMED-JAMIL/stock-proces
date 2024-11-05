@@ -1,5 +1,6 @@
 package com.stock.process.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stock.process.dto.*;
 import com.stock.process.efs.EfsFileExchange;
 import com.stock.process.enums.FileStatus;
@@ -8,7 +9,6 @@ import com.stock.process.model.AuditLog;
 import com.stock.process.model.FileInfo;
 import com.stock.process.repository.AuditLogRepository;
 import com.stock.process.repository.FileInfoRepository;
-import com.stock.process.repository.StockPriceRepository;
 import com.stock.process.service.FileInfoService;
 import com.stock.process.util.BarcoUtil;
 import org.slf4j.Logger;
@@ -44,8 +44,6 @@ public class FileInfoServiceImpl implements FileInfoService {
     private FileInfoRepository fileInfoRepository;
     @Autowired
     private AuditLogRepository auditLogRepository;
-    @Autowired
-    private StockPriceRepository stockPriceRepository;
     @Autowired
     private EfsFileExchange efsFileExchange;
 
@@ -93,12 +91,66 @@ public class FileInfoServiceImpl implements FileInfoService {
         // if the page is 1 so we check in the zero index so [page number = page number -1]
         pageNumber = pageNumber - 1;
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
-        Page<FileInfo> response = this.fileInfoRepository.findAllByDateCreated(Date.valueOf(LocalDate.parse(date)), pageRequest);
+        Page<FileInfo> response = this.fileInfoRepository.findAllByDateCreatedAndTypeIn(Date.valueOf(LocalDate.parse(date)), Arrays.asList("CSV", "TXT", "PARQUET"), pageRequest);
         List<FileInfoDto> arrays = new ArrayList<>();
          for(FileInfo fileInfo: response) {
              arrays.add(this.getFileInfoDto(fileInfo));
          }
         return new PageImpl<>(arrays, pageRequest, response.getTotalElements());
+    }
+
+    /**
+     * Method use to fetch file list by date & status file
+     * @param date
+     * @param pageSize
+     * @param pageNumber
+     * @return AppResponse
+     * @throws Exception
+     * */
+    @Override
+    public Page<FileInfoDto> fetchFileListByDateAndFileStatus(String date, FileStatus fileStatus, Integer pageNumber, Integer pageSize) throws Exception {
+        logger.info("FileInfoServiceImpl :: fetchFileListByDateAndFileStatus -> call date={} fileStatus={} pageNumber={} pageSize={}",
+            date, fileStatus, pageNumber, pageSize);
+        if (BarcoUtil.isBlank(date)) {
+            throw new Exception(String.format("Invalid: Data %s.", date));
+        }   else if (BarcoUtil.isNull(fileStatus)) {
+            throw new Exception(String.format("Invalid: fileStatus %s.", fileStatus));
+        } else if (BarcoUtil.isNull(pageNumber) || pageNumber <= 0) {
+            throw new Exception(String.format("Invalid: PageNumber %s.", pageNumber));
+        } else if (BarcoUtil.isNull(pageSize)) {
+            throw new Exception(String.format("Invalid: PageSize %s.", pageSize));
+        }
+        // if the page is 1 so we check in the zero index so [page number = page number -1]
+        pageNumber = pageNumber - 1;
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+        Page<FileInfo> response = this.fileInfoRepository.fetchFileListByDateAndFileStatusAndTypeIn(Date.valueOf(LocalDate.parse(date)),
+            fileStatus, Arrays.asList("CSV", "TXT", "PARQUET"), pageRequest);
+        List<FileInfoDto> arrays = new ArrayList<>();
+        for(FileInfo fileInfo: response) {
+            arrays.add(this.getFileInfoDto(fileInfo));
+        }
+        return new PageImpl<>(arrays, pageRequest, response.getTotalElements());
+    }
+
+    /**
+     * Method use to fetch process file by status
+     * @param fileId
+     * @return AppResponse
+     * @throws Exception
+     * */
+    @Override
+    public AppResponse fetchProcessFileByStatus(Integer fileId) throws Exception {
+        logger.info("FileInfoServiceImpl :: fetchProcessFileByStatus -> call fileId={} ", fileId);
+        Optional<FileInfo> fileInfo =  this.fileInfoRepository.findById(Long.valueOf(fileId));
+        if (!fileInfo.isPresent()) {
+            return new AppResponse(BarcoUtil.ERROR, "File info not found with id.");
+        } else if (BarcoUtil.isBlank(fileInfo.get().getSegmentPath())) {
+            return new AppResponse(BarcoUtil.ERROR, "File info not found with id.");
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        // Adjust the path according to your project structure
+        File file = this.efsFileExchange.getFile(fileInfo.get().getSegmentPath());
+        return new AppResponse(BarcoUtil.SUCCESS, "File fetch successfully.", objectMapper.readValue(file, Object.class));
     }
 
     /**
@@ -146,6 +198,7 @@ public class FileInfoServiceImpl implements FileInfoService {
                 fileInfo.setFolder(folderPath);  // root path + date folder
                 fileInfo.setPath(folderPath.concat("/" + filename));  // Full path for file saving
                 fileInfo.setFilename(filename);
+                fileInfo.setRequestId(UUID.randomUUID().toString());
                 fileInfo.setType(this.getDocumentType(newFile));  // Set file type based on content
                 fileInfo.setFileStatus(FileStatus.Pending);  // Set initial status
                 fileInfo.setStatus(Status.Active);
@@ -215,8 +268,6 @@ public class FileInfoServiceImpl implements FileInfoService {
         this.fileInfoRepository.save(fileInfo.get());
         // delete the audit logs
         this.auditLogRepository.updateStatusByFileId(Status.Delete, fileInfo.get());
-        // stock-price
-        this.stockPriceRepository.updateStatusByFileId(Status.Delete, fileInfo.get());
     }
 
     /**
@@ -248,6 +299,7 @@ public class FileInfoServiceImpl implements FileInfoService {
     private FileInfoDto getFileInfoDto(FileInfo fileInfo) {
         FileInfoDto fileInfoDto = new FileInfoDto();
         fileInfoDto.setId(fileInfo.getId());
+        fileInfoDto.setRequestId(fileInfo.getRequestId());
         fileInfoDto.setFolder(fileInfo.getFolder());
         fileInfoDto.setFilename(fileInfo.getFilename());
         fileInfoDto.setType(fileInfo.getType());
@@ -279,7 +331,6 @@ public class FileInfoServiceImpl implements FileInfoService {
     private boolean isValidFileType(List<MultipartFile> files) {
         for (MultipartFile file : files) {
             String contentType = file.getContentType();
-            System.out.println("Uploaded file content type: " + contentType);
             if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
                 return false;  // Return false immediately if any file has an invalid content type
             }

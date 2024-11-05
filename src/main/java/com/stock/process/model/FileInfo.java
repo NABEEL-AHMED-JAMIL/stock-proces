@@ -31,6 +31,10 @@ public class FileInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // same request id can be same with multiple
+    @Column(name = "request_id")
+    private String requestId;
+
     @Column(name = "folder", nullable = false)
     private String folder;
 
@@ -59,6 +63,7 @@ public class FileInfo {
 
     @PrePersist
     public void onCreate() {
+        this.status = Status.Active;
         this.dateCreated = new Timestamp((System.currentTimeMillis()));
     }
 
@@ -70,6 +75,14 @@ public class FileInfo {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
     public String getFolder() {

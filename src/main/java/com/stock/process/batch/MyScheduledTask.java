@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import java.util.Arrays;
 
 /**
  * @author Nabeel Ahmed
@@ -43,7 +44,8 @@ public class MyScheduledTask {
     @SchedulerLock(name = "stockFile_queueTask", lockAtLeastFor = "5S", lockAtMostFor = "10M")
     public void queueTask() {
         logger.info("queueTask :: start time [ {} ] ms", System.currentTimeMillis());
-        this.fileInfoRepository.findTop20ByStatusAndFileStatus(Status.Active, FileStatus.Pending, PageRequest.of(page, size))
+        this.fileInfoRepository.findTop20ByStatusAndFileStatusAndTypeIn(Status.Active, FileStatus.Pending,
+            Arrays.asList("CSV", "TXT", "PARQUET"), PageRequest.of(page, size))
         .forEach(fileInfo -> {
             fileInfo.setFileStatus(FileStatus.Queue);
             this.fileInfoRepository.save(fileInfo);
@@ -63,7 +65,8 @@ public class MyScheduledTask {
     @SchedulerLock(name = "stockFile_runTask", lockAtLeastFor = "5S", lockAtMostFor = "10M")
     public void runTask() {
         logger.info("runTask :: start time [ {} ] ms", System.currentTimeMillis());
-        this.fileInfoRepository.findTop20ByStatusAndFileStatus(Status.Active, FileStatus.Queue, PageRequest.of(page, size))
+        this.fileInfoRepository.findTop20ByStatusAndFileStatusAndTypeIn(Status.Active, FileStatus.Queue,
+            Arrays.asList("CSV", "TXT", "PARQUET"), PageRequest.of(page, size))
             .forEach(fileInfo -> {
                 StockPriceProcessor stockPriceProcessor = new StockPriceProcessor(efsFileExchange, fileInfoRepository, auditLogRepository);
                 stockPriceProcessor.setFileInfo(fileInfo);

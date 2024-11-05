@@ -48,10 +48,13 @@ public interface FileInfoRepository extends CrudRepository<FileInfo, Long> {
         nativeQuery = true)
     public List<StatisticDto> fetchFileInfoCurrentMonthDailyCountByType(@Param("month") String month);
 
-    @Query("SELECT f FROM FileInfo f WHERE DATE(f.dateCreated) = :dateCreated ORDER BY f.id desc")
-    public Page<FileInfo> findAllByDateCreated(@Param("dateCreated") Date dateCreated, Pageable pageable);
+    @Query("SELECT f FROM FileInfo f WHERE DATE(f.dateCreated) = :dateCreated AND f.type IN :type ORDER BY f.id DESC")
+    public Page<FileInfo> findAllByDateCreatedAndTypeIn(@Param("dateCreated") Date dateCreated, @Param("type") List<String> type, Pageable pageable);
 
-    @Query("SELECT f FROM FileInfo f WHERE f.status = :status AND f.fileStatus = :fileStatus ORDER BY f.id ASC")
-    public List<FileInfo> findTop20ByStatusAndFileStatus(@Param("status") Status status, @Param("fileStatus") FileStatus fileStatus, Pageable pageable);
+    @Query("SELECT f FROM FileInfo f WHERE DATE(f.dateCreated) = :dateCreated AND f.fileStatus = :fileStatus AND f.type IN :type AND f.segmentPath IS NOT NULL ORDER BY f.id DESC")
+    public Page<FileInfo> fetchFileListByDateAndFileStatusAndTypeIn(@Param("dateCreated") Date dateCreated, @Param("fileStatus") FileStatus fileStatus, @Param("type") List<String> type, Pageable pageable);
+
+    @Query("SELECT f FROM FileInfo f WHERE f.status = :status AND f.fileStatus = :fileStatus AND f.type IN :type ORDER BY f.id ASC")
+    public List<FileInfo> findTop20ByStatusAndFileStatusAndTypeIn(@Param("status") Status status, @Param("fileStatus") FileStatus fileStatus, @Param("type") List<String> type, Pageable pageable);
 
 }

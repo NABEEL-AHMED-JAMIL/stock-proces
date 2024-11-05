@@ -34,16 +34,17 @@ if __name__ == '__main__':
         # Use the existing directory for saving the CSV file
         directory = r"C:\Users\njamil\Desktop\Nabeel RND\ren-data-gerator\stock-dump-file"
         file_path = os.path.join(directory, f"{random_date}.csv")
+        df.to_csv(file_path, index=False)
         # file_path = os.path.join(directory, f"{random_date}.pqt")
-        df.to_parquet(file_path, index=False)
+        # df.to_parquet(file_path, index=False)
         # copy the file from directory and send this to apie
-        response = requests.post("http://localhost:9097/action.json/uploadFile",
-             files={
-                 'files[0]': (f"{random_date}.csv", open(file_path, 'rb'), 'text/csv')
-             }
-             # files = {
-             #     'files[0]': (f"{random_date}.pqt", open(file_path, 'rb'), 'application/x-parquet')
-             # }
+        response = requests.post("http://localhost:9097/api/v2/action.json/uploadFile",
+            files={
+                'file': (f"{random_date}.csv", open(file_path, 'rb'), 'text/csv')
+            }
+            # files = {
+            #     'files[0]': (f"{random_date}.pqt", open(file_path, 'rb'), 'application/x-parquet')
+            # }
         )
         # Print the response from the server
         print(f"Response from server: {response.status_code}, {response}")
