@@ -122,21 +122,7 @@ public class StockPriceProcessor implements Runnable {
      * Method use to read the parquet file and process
      * */
     private void readPARQUETFile() throws Exception {
-//        String segmentPath = this.fileInfo.getFolder().concat("/")
-//            .concat(this.fileInfo.getFilename().replace(".csv",".parquet"));
-//        this.fileInfo.setSegmentPath(segmentPath);
-//        Gson gson = new Gson();
-//        File file = this.efsFileExchange.getFile(this.fileInfo.getPath());
-//        JsonObject jsonObject = getJsonObject(FileUtils.readLines(file, "UTF-8"));
-//        String jsonString = gson.toJson(jsonObject);
-//        // Create a ByteArrayOutputStream
-//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//        // Write the JSON string into the ByteArrayOutputStream as bytes
-//        byteArrayOutputStream.write(jsonString.getBytes(StandardCharsets.UTF_8));
-//        this.efsFileExchange.saveFile(byteArrayOutputStream, this.fileInfo.getSegmentPath());
-//        this.fileInfoRepository.save(this.fileInfo); // the path for segment path
-//        String message = String.format("File creating for [%s]", segmentPath);
-//        this.auditLogMessage("Process action for [%s], "+message);
+        // working on
     }
 
     /**
