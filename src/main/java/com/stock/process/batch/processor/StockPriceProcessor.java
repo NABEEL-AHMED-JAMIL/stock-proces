@@ -13,7 +13,6 @@ import com.stock.process.util.BarcoUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
@@ -65,6 +64,7 @@ public class StockPriceProcessor implements Runnable {
             if (this.fileInfo.getType().equals("CSV") || this.fileInfo.getType().equals("TXT")) {
                 this.readCSVFile();
             } else if (this.fileInfo.getType().equals("PARQUET")) {
+                // working on that part
                 this.readPARQUETFile();
             }
             // Running to Completed
