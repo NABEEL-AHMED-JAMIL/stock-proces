@@ -1,31 +1,64 @@
-package com.stock.process.dto;
+package com.stock.process.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.stock.process.enums.FileStatus;
 import com.stock.process.enums.Status;
+import javax.persistence.*;
 import java.sql.Timestamp;
 
 /**
  * @author Nabeel Ahmed
  */
+@Entity
+@Table(name = "sw_task_file_info")
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class FileInfoDto {
+public class SwTaskFile {
 
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String requestId;
+
+    @ManyToOne
+    @JoinColumn(name = "sw_task_id", nullable = false)
+    private SWTask swTask;
+
+    @Column(name = "folder", nullable = false)
     private String folder;
+
+    @Column(name = "filename", nullable = false)
     private String filename;
+
+    @Column(name = "type", nullable = false)
     private String type;
+
+    @Column(name = "path", nullable = false)
     private String path;
+
+    @Column(name = "segment_path")
     private String segmentPath;
+
+    @Column(name = "file_status")
+    @Enumerated(EnumType.ORDINAL)
     private FileStatus fileStatus;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.ORDINAL)
     private Status status;
+
+    @Column(name = "date_created", nullable = false)
     private Timestamp dateCreated;
 
-    public FileInfoDto() {}
+    @PrePersist
+    public void onCreate() {
+        this.status = Status.Active;
+        this.dateCreated = new Timestamp((System.currentTimeMillis()));
+    }
+
+    public SwTaskFile() {}
 
     public Long getId() {
         return id;
@@ -35,12 +68,12 @@ public class FileInfoDto {
         this.id = id;
     }
 
-    public String getRequestId() {
-        return requestId;
+    public SWTask getSwTask() {
+        return swTask;
     }
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
+    public void setSwTask(SWTask swTask) {
+        this.swTask = swTask;
     }
 
     public String getFolder() {

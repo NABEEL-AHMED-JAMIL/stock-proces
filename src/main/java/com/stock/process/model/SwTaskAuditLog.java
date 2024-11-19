@@ -11,10 +11,10 @@ import java.sql.Timestamp;
  * @author Nabeel Ahmed
  */
 @Entity
-@Table(name = "audit_log")
+@Table(name = "sw_task_audit_log")
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuditLog {
+public class SwTaskAuditLog {
 
     @Id
     @Column(name = "id")
@@ -22,8 +22,8 @@ public class AuditLog {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "file_id")
-    private FileInfo fileInfo;
+    @JoinColumn(name = "sw_task_id")
+    private SWTask swTask;
 
     @Column(name = "log_detail",
         nullable = false, length = 2500)
@@ -37,13 +37,13 @@ public class AuditLog {
     @Enumerated(EnumType.ORDINAL)
     private Status status;
 
-    public AuditLog() {}
-
     @PrePersist
     protected void onCreate() {
         this.status = Status.Active;
         this.dateCreated = new Timestamp(System.currentTimeMillis());
     }
+
+    public SwTaskAuditLog() {}
 
     public Long getId() {
         return id;
@@ -53,12 +53,12 @@ public class AuditLog {
         this.id = id;
     }
 
-    public FileInfo getFileInfo() {
-        return fileInfo;
+    public SWTask getSwTask() {
+        return swTask;
     }
 
-    public void setFileInfo(FileInfo fileInfo) {
-        this.fileInfo = fileInfo;
+    public void setSwTask(SWTask swTask) {
+        this.swTask = swTask;
     }
 
     public String getLogsDetail() {
