@@ -1,4 +1,4 @@
-﻿package com.stock.process.repository;
+package com.stock.process.repository;
 
 import com.stock.process.model.SwUser;
 import org.springframework.data.repository.CrudRepository;

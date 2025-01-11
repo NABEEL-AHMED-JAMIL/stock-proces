@@ -1,6 +1,6 @@
-﻿package com.stock.process.repository;
+package com.stock.process.repository;
 
-import org.apache.tomcat.jni.FileInfo;
+import com.stock.process.model.SwTaskFile;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
  * @author Nabeel Ahmed
  */
 @Repository
-public interface SwTaskFileRepository extends CrudRepository<FileInfo, Long> {
+public interface SwTaskFileRepository extends CrudRepository<SwTaskFile, Long> {
 }

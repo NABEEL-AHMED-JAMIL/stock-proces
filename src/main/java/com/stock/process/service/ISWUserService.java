@@ -1,4 +1,7 @@
-﻿package com.stock.process.service;
+package com.stock.process.service;
 
+/**
+ * @author Nabeel Ahmed
+ */
 public interface ISWUserService {
 }

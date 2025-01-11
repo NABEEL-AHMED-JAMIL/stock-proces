@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.stock.process.enums.Status;
 import com.stock.process.enums.TaskStatus;
+import com.stock.process.enums.TaskType;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -29,9 +31,17 @@ public class SWTask {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Column(name = "task_type", nullable = false)
+    @Enumerated(EnumType.ORDINAL)
+    private TaskType taskType;
+
     @Column(name = "task_status", nullable = false)
     @Enumerated(EnumType.ORDINAL)
     private TaskStatus taskStatus;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String jsonPayload;
 
     @OneToMany(mappedBy = "swTask", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SwTaskAuditLog> swTaskAuditLogs;
@@ -83,12 +93,28 @@ public class SWTask {
         this.description = description;
     }
 
+    public TaskType getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(TaskType taskType) {
+        this.taskType = taskType;
+    }
+
     public TaskStatus getTaskStatus() {
         return taskStatus;
     }
 
     public void setTaskStatus(TaskStatus taskStatus) {
         this.taskStatus = taskStatus;
+    }
+
+    public String getJsonPayload() {
+        return jsonPayload;
+    }
+
+    public void setJsonPayload(String jsonPayload) {
+        this.jsonPayload = jsonPayload;
     }
 
     public List<SwTaskAuditLog> getSwTaskAuditLogs() {
