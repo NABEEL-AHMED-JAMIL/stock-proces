@@ -12,14 +12,11 @@ import com.stock.process.repository.FileInfoRepository;
 import com.stock.process.util.BarcoUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.linear.ArrayRealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -109,7 +106,7 @@ public class StockPriceProcessor implements Runnable {
         this.fileInfo.setSegmentPath(segmentPath);
         Gson gson = new Gson();
         File file = this.efsFileExchange.getFile(this.fileInfo.getPath());
-        JsonObject jsonObject = getJsonObject(FileUtils.readLines(file, "UTF-8"));
+        JsonObject jsonObject = this.getJsonObject(FileUtils.readLines(file, "UTF-8"));
         String jsonString = gson.toJson(jsonObject);
         // Create a ByteArrayOutputStream
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -159,12 +156,6 @@ public class StockPriceProcessor implements Runnable {
                 rowCount++;
                 JsonObject dataParse = new JsonObject();
                 dataParse.add("text", this.createTextRow(values, statisticsArray));
-                // Convert RealVector to JsonArray
-                JsonArray jsonArray = new JsonArray();
-                for (double value :  this.createVectorRow(values).toArray()) {
-                    jsonArray.add(value);
-                }
-                dataParse.add("vector", jsonArray);
                 rows.add(dataParse);
             }
         }
@@ -223,32 +214,6 @@ public class StockPriceProcessor implements Runnable {
         return textArray;
     }
 
-
-    /**
-     * Method use to create vector row
-     * @param values
-     * @return JsonArray
-     * */
-    private ArrayRealVector createVectorRow(String[] values) {
-        double[] vector = new double[values.length];
-        for (int i = 0; i < values.length; i++) {
-            // Assuming columns 1-6 are Open, High, Low, Close, Volume, OpenInt
-            if (i >= 1 && i <= 6) {
-                double value = 0.0;
-                try {
-                    value = Double.parseDouble(values[i]);
-                    vector[i] = value;
-                } catch (NumberFormatException ex) {
-                    vector[i] = value;
-                }
-            } else {
-                vector[i] = convertDateToTimestamp(values[i]);
-            }
-        }
-        return new ArrayRealVector(vector);
-    }
-
-
     /**
      * Method use to create the summary
      * @param statisticsArray
@@ -279,18 +244,6 @@ public class StockPriceProcessor implements Runnable {
         summaryDetail.addProperty("median", stats.getPercentile(50));
         summaryDetail.addProperty("thirdQuartile", stats.getPercentile(75));
         return summaryDetail;
-    }
-
-    // Helper function to convert date to timestamp (seconds since epoch)
-    public static long convertDateToTimestamp(String dateString) {
-        try {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = format.parse(dateString);
-            return date.getTime() / 1000; // Convert milliseconds to seconds
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
     }
 
     public FileInfo getFileInfo() {

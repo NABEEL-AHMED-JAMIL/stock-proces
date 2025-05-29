@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: nabeel.amd93
+      comment: Create a insertion question
+      changes:
+        - sqlFile:
+            path: ../changelog-sets/V2.0-init/V2__insertion_question_schema.sql
+            relativeToChangelogFile: true

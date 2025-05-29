@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: nabeel.amd93
+      comment: Create a shed
+      changes:
+        - sqlFile:
+            path: ../changelog-sets/V1.0-init/V1__creating_shedlock_schema.sql
+            relativeToChangelogFile: true
+      rollback:
+        - sqlFile:
+            path: ../changelog-sets/V1.0-init/V1__rollback_shedlock_schema.sql
+            relativeToChangelogFile: true
