@@ -1,20 +1,20 @@
-# Stock Data Processing Backend (Spring Boot)
+# Stock Data Processing Backend (Stock Data)
 
 This is a Spring Boot application for processing stock data with AI capabilities.
 
 - Uploading stock data files (CSV, Parquet) from the frontend
 - Saving uploaded files on the server's local filesystem
 - Parsing and processing files to extract financial data
-- Generating vector embeddings using OpenAI Embedding API
+- Generating vector embeddings using Ollama Embedding API
 - Storing embeddings in PostgreSQL with the `pgvector` extension
 - Querying vector database to find relevant stock data for user queries
-- Calling OpenAI GPT API to generate contextual natural language answers based on retrieved data
+- Calling Ollama GPT API to generate contextual natural language answers based on retrieved data
 
 ### Features
 
 - **File Upload API:** Accepts multipart file uploads and saves files locally
 - **File Processing:** Parses CSV and Parquet files to extract stock data
-- **Embedding Generation:** Converts extracted data into vector embeddings via OpenAI
+- **Embedding Generation:** Converts extracted data into vector embeddings via Ollama3
 - **Vector Storage:** Persists embeddings into PostgreSQL with pgvector for similarity search
 - **Query API:** Receives user queries, retrieves similar vectors, and returns generated answers
 
@@ -23,7 +23,7 @@ This is a Spring Boot application for processing stock data with AI capabilities
 - Java 8
 - Maven or Gradle
 - PostgreSQL with `pgvector` extension installed and enabled
-- OpenAI API key
+- Ollama3 API key
 - Backend server machine with sufficient disk space for storing uploaded files
 
 ## Branch Information
@@ -53,11 +53,29 @@ This is a Spring Boot application for processing stock data with AI capabilities
 
 - Set the following environment variables or provide in `application.properties`:
 
-## 4 Dataset
+## 4. Dataset
 
 We use the **[Price and Volume Data for All US Stocks & ETFs](https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs)** dataset by Boris Marjanovic, hosted on Kaggle.
 
-#### 📝 Description
+## Project Structure
+
+### src/main/java/com/stock/process/
+- api # REST API controllers and related classes
+- config # Configuration classes (e.g., thread pools, properties)
+- domain # Domain models and dto, enums, repository, service etc.
+- etl # ETL (Extract, Transform, Load) related logic
+- util # Utility classes and helpers
+- StockProcessApplication.java # Main Spring Boot application entry point
+
+### src/main/resources/
+- db.changelog # Database migration scripts (Liquibase or Flyway)
+- application.properties # Base configuration properties
+- application-dev.properties # Development environment properties
+- application-prod.properties# Production environment properties
+- application-staging.properties # Staging environment properties
+
+
+### 📝 Description
 
 The dataset contains daily stock market data for a wide range of US stocks and ETFs, with individual CSV files for each ticker symbol (e.g., `AAPL.csv`, `MSFT.csv`).
 

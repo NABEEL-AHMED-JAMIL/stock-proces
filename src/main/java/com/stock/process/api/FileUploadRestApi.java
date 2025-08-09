@@ -1,13 +1,12 @@
 package com.stock.process.api;
 
-import com.stock.process.dto.AppResponse;
-import com.stock.process.dto.FileUploadRequest;
-import com.stock.process.service.FileInfoService;
+import com.stock.process.domain.dto.AppResponse;
+import com.stock.process.domain.dto.FileUploadRequest;
+import com.stock.process.domain.service.FileInfoService;
 import com.stock.process.util.BarcoUtil;
 import com.stock.process.util.ExceptionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,10 +26,11 @@ public class FileUploadRestApi {
 
     private Logger logger = LoggerFactory.getLogger(FileUploadRestApi.class);
 
-    @Autowired
-    private FileInfoService fileInfoService;
+    private final FileInfoService fileInfoService;
 
-    public FileUploadRestApi() {}
+    public FileUploadRestApi(FileInfoService fileInfoService) {
+        this.fileInfoService = fileInfoService;
+    }
 
     /**
      * @apiName :- uploadFile

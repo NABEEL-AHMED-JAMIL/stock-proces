@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: ankane/pgvector
+    container_name: pgvector-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vectordb
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  stock-process:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-process
+    ports:
+      - "9097:9097"
+    volumes:
+      - efs_data:/tmp/efs
+      - logs_data:/tmp/logs
+
+volumes:
+  pg_data:
+  ollama_data:
+  efs_data:
+  logs_data:

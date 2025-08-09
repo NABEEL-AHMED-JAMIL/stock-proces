@@ -1,0 +1,33 @@
+# compose file commands
+docker-compose down
+docker-compose up -d
+docker ps
+
+# This will download the llama3 model inside the container.
+docker exec -it ollama /bin/sh -c "ollama pull llama3"
+
+# After it finishes, you can check available models:
+docker exec -it ollama /bin/sh -c "ollama list"
+
+# Verify pgvector Extension
+SELECT * FROM pg_extension;
+
+# installation using DBeaver or pgAdmin
+CREATE EXTENSION IF NOT EXISTS vector;
+
+# Stock data download path
+Host	localhost
+Port	5433
+Database	vectordb
+Username	postgres
+Password	postgres
+
+# Stock data download path
+https://www.kaggle.com/code/aupaalaa/starter-huge-stock-market-dataset-7c5bf888-b/input
+
+# Stock backend application -> branch [stock-data-with-ai]
+https://github.com/NABEEL-AHMED-JAMIL/stock-proces
+
+
+# Stock frontend application -> branch [stock-data-with-ai]
+https://github.com/NABEEL-AHMED-JAMIL/my-user-redux-frontend

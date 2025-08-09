@@ -1,8 +1,8 @@
 package com.stock.process.api;
 
-import com.stock.process.dto.AppResponse;
-import com.stock.process.dto.FileInfoDto;
-import com.stock.process.service.FileInfoService;
+import com.stock.process.domain.dto.AppResponse;
+import com.stock.process.domain.dto.FileInfoDto;
+import com.stock.process.domain.service.FileInfoService;
 import com.stock.process.util.BarcoUtil;
 import com.stock.process.util.ExceptionUtil;
 import org.springframework.data.domain.Page;
@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -24,10 +23,11 @@ public class BatchProcessRestApi {
 
     private Logger logger = LoggerFactory.getLogger(BatchProcessRestApi.class);
 
-    @Autowired
-    private FileInfoService fileInfoService;
+    private final FileInfoService fileInfoService;
 
-    public BatchProcessRestApi() {}
+    public BatchProcessRestApi(FileInfoService fileInfoService) {
+        this.fileInfoService = fileInfoService;
+    }
 
     /**
      * @apiName :- index

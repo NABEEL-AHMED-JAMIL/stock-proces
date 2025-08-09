@@ -1,7 +1,7 @@
 package com.stock.process.config;
 
-import com.stock.process.batch.async.executor.AsyncDALTaskExecutor;
-import com.stock.process.batch.async.properties.AsyncTaskProperties;
+import com.stock.process.etl.async.executor.AsyncDALTaskExecutor;
+import com.stock.process.etl.async.properties.AsyncTaskProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

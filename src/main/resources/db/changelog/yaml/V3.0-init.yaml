@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: nabeel.amd93
+      comment: Create a pgvector extension
+      changes:
+        - sqlFile:
+            path: ../changelog-sets/V3.0-init/V3__creating_pgvector_extension.sql
+            relativeToChangelogFile: true
