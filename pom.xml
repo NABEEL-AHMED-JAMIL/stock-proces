@@ -29,7 +29,7 @@
 
 	<groupId>com.stock.process</groupId>
 	<artifactId>stock-proces</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<name>stock-proces</name>
 	<description>Batch Process</description>
 

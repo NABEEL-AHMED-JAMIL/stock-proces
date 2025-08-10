@@ -1,5 +1,6 @@
 # Start with a base image containing Java runtime
-FROM openjdk:8-jdk-alpine
+FROM openjdk:17-jdk-alpine
+
 LABEL maintainer="nabeel.amd93@gmail.com"
 
 # Create /tmp/efs directory
@@ -16,7 +17,7 @@ VOLUME /tmp/logs
 EXPOSE 9097
 
 # The application's jar file
-ARG JAR_FILE=/target/stock-proces.jar
+ARG JAR_FILE=/target/stock-proces-0.1.jar
 
 # Add the application jar to the container
 ADD ${JAR_FILE} app.jar
